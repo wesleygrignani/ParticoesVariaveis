@@ -1,0 +1,4 @@
+#ifndef PRIMEIROINSERT_H
+#define PRIMEIROINSERT_H
+
+#endif // PRIMEIROINSERT_H

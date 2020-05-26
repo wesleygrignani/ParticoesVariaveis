@@ -7,28 +7,33 @@
 
 
 using namespace std;
-#define TAM 1024
+#define TAM 1024    //Tamanho da memoria configuravel
 
-class processo{
+class processo{ //classe processo
 public:
     int tamanho;
     int id;
     int tempo;
 };
 
-class bloco{
+class bloco{ //bloco de memoria
 public:
     int id;
     processo p;
     int tamanho;
 };
 
-class memoria{
+class memoria{ //memoria com um array de blocos
 public:
     list<bloco> p;
     int tamanho = TAM;
 };
 
+void gotoxy(short x, short y)           //definition of gotoxy function//
+{
+ COORD pos ={x,y};
+ SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+}
 
 void primeiroInsert(queue<processo> &processos, memoria &memoria){
 
@@ -77,8 +82,8 @@ void firstfit(queue<processo> &processos, memoria &memoria){ //primeiro bloco co
                 block.p.tempo = processo.tempo;
                 block.p.tamanho = processo.tamanho;
 
-                memoria.p.insert(it,block);
-                memoria.p.erase(it);
+                it = memoria.p.erase(it);
+                it = memoria.p.insert(it,block);
 
                 processos.pop();
 
@@ -99,11 +104,10 @@ void firstfit(queue<processo> &processos, memoria &memoria){ //primeiro bloco co
 
                 block2.tamanho -= processo.tamanho;
 
-                memoria.p.insert(it,block);
-                memoria.p.insert(it,block2);
-                memoria.p.erase(it);
-                //it++;
-                memoria.p.erase(it);
+                it = memoria.p.erase(it);
+                it = memoria.p.insert(it,block2);
+                it = memoria.p.insert(it,block);
+                //memoria.p.erase(it);
 
                 processos.pop();
 
@@ -114,24 +118,36 @@ void firstfit(queue<processo> &processos, memoria &memoria){ //primeiro bloco co
 }
 
 void imprimir(memoria memoria){
-int tam = 1;
+int tam = 1,x=0,y=0;
     for (auto const& i : memoria.p) {
         bloco aux;
         aux.p = i.p;
         aux.id = i.id;
         aux.tamanho = i.tamanho;
         if(aux.p.id == 0 ){
-            cout <<"|                    BLOCO DE MEMORIA                    |\n";
-            cout <<"|--------------------------------------------------------|"<<"\n";
-            cout <<"|Memoria     Tamanho(B)        Processos\n";
-            cout <<"|Bloco "<<tam<<":       "<<aux.tamanho<<"     | Processo: VAZIO"<<" Tempo:VAZIO        LIVRE\n";
-            cout <<"|--------------------------------------------------------|"<<"\n";
+            gotoxy(x,y);
+            cout <<"|                    BLOCO DE MEMORIA                    |";
+            y++;gotoxy(x,y);
+            cout <<"|--------------------------------------------------------|";
+            y++;gotoxy(x,y);
+            cout <<"|Memoria     Tamanho(B)        Processos";
+            y++;gotoxy(x,y);
+            cout <<"|Bloco "<<tam<<":       "<<aux.tamanho<<"       |Processo: VAZIO"<<" Tempo:VAZIO        LIVRE";
+            y++;gotoxy(x,y);
+            cout <<"|--------------------------------------------------------|";
+            y++;
         }else{
-        cout <<"|                    BLOCO DE MEMORIA                    |\n";
-        cout <<"|--------------------------------------------------------|"<<"\n";
+        gotoxy(x,y);
+        cout <<"|                    BLOCO DE MEMORIA                    |";
+        y++;gotoxy(x,y);
+        cout <<"|--------------------------------------------------------|";
+        y++;gotoxy(x,y);
         cout <<"|Memoria     Tamanho(B)        Processos\n";
-        cout <<"|Bloco "<<tam<<":      "<<aux.tamanho<<"      | Processo:"<<aux.p.id<<" Tempo:"<<aux.p.tempo<<"               OCUPADO\n";
-        cout <<"|--------------------------------------------------------|"<<"\n";
+        y++;gotoxy(x,y);
+        cout <<"|Bloco "<<tam<<":      "<<aux.tamanho<<"        |Processo:"<<aux.p.id<<" Tempo:"<<aux.p.tempo<<"               OCUPADO";
+        y++;gotoxy(x,y);
+        cout <<"|--------------------------------------------------------|";
+        y++;
         }
         tam++;
     }
@@ -145,15 +161,15 @@ void reduzirTempo(memoria &memoria){
 
             if(block.p.tempo!=0){
                 block.p.tempo -= 1;
-                memoria.p.insert(it,block);
-                memoria.p.erase(it);
+                it = memoria.p.erase(it);
+                it = memoria.p.insert(it,block);
 
             }else{
                 block.p.id = 0;
                 block.p.tempo = 0;
                 block.p.tamanho = 0;
-                memoria.p.insert(it,block);
-                memoria.p.erase(it);
+                it = memoria.p.erase(it);
+                it = memoria.p.insert(it,block);
             }
 
             it++;
@@ -195,6 +211,25 @@ void analisarBlocos(memoria &memoria){
         it++;
     }
 }
+
+void imprimirProcessos(queue<processo> p){
+    int x=85,y=0;
+    while(p.size()!=0){
+        processo t = p.front();
+        gotoxy(x,y);
+        cout<<"|---------Processo----------|";
+        y++;
+        gotoxy(x,y);
+        cout<<"|Id       Tamanho      Tempo|";
+        y++;
+        gotoxy(x,y);
+        cout<<"  "<<t.id<<"         "<<t.tamanho<<"          "<<t.tempo;
+        y++;
+        p.pop();
+    }
+};
+
+
 
 int main()
 {
@@ -239,10 +274,22 @@ int main()
     aux.tamanho=94;
     processos.push(aux);
 
+    aux.id=8;
+    aux.tempo=6;
+    aux.tamanho=290;
+    processos.push(aux);
+
+    aux.id=9;
+    aux.tempo=3;
+    aux.tamanho=90;
+    processos.push(aux);
 
     primeiroInsert(processos,memoria);
     imprimir(memoria);
-    Sleep(2000);
+    Sleep(1000);
+
+    queue<processo> t = processos;
+    imprimirProcessos(t);
 
     while(processos.size()!=0){
         firstfit(processos,memoria);
@@ -250,15 +297,25 @@ int main()
         system("cls");
         imprimir(memoria);
 
+        queue<processo> t = processos;
+        imprimirProcessos(t);
+
+        reduzirTempo(memoria);
+        system("cls");
+        imprimir(memoria);
+
+        imprimirProcessos(t);
+
         Sleep(1000);
         system("cls");
         analisarBlocos(memoria);
         imprimir(memoria);
 
-        reduzirTempo(memoria);
-        system("cls");
-        imprimir(memoria);
+        imprimirProcessos(t);
+
     }
 
 
+
+    return 0;
 }
